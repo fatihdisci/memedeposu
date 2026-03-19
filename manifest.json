@@ -1,0 +1,12 @@
+{
+  "name": "Meme Deposu",
+  "short_name": "Memeler",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#0d0d0d",
+  "icons": [
+    { "src": "https://fav.farm/🗂️", "sizes": "192x192", "type": "image/png" },
+    { "src": "https://fav.farm/🗂️", "sizes": "512x512", "type": "image/png" }
+  ]
+}
