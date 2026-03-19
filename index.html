@@ -1,874 +1,496 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Meme Deposu</title>
-  <script>
-    window.__MEME_DEPOT_CONFIG__ = {
-      SUPABASE_URL: "https://XXXX.supabase.co",
-      SUPABASE_KEY: "eyJXXXXXX..." // anon key (fallback)
-    };
-  </script>
-  <script src="/api/config.js"></script>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <style>
-    :root {
-      --bg: #0d0d0d;
-      --card: #1a1a1a;
-      --accent: #e8ff47;
-      --text: #f0f0f0;
-      --muted: #888;
-      --border: #2a2a2a;
-      --radius: 14px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      background: radial-gradient(circle at 20% 0%, #171717, #0d0d0d 45%);
-      color: var(--text);
-      font-family: "DM Sans", sans-serif;
-      min-height: 100vh;
-    }
-
-    .container {
-      width: min(1180px, 100% - 24px);
-      margin: 24px auto 80px;
-    }
-
-    .topbar {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    h1 {
-      margin: 0;
-      font-family: "DM Mono", monospace;
-      letter-spacing: 0.04em;
-      font-size: clamp(22px, 3vw, 32px);
-    }
-
-    .search {
-      width: 100%;
-      border: 0;
-      border-bottom: 2px solid var(--accent);
-      background: #0a0a0a;
-      color: var(--text);
-      padding: 12px 14px;
-      font-size: 15px;
-      outline: none;
-      transition: all 0.15s ease;
-      border-radius: 8px 8px 0 0;
-    }
-
-    .search:focus {
-      background: #131313;
-      border-bottom-color: #f3ff9c;
-    }
-
-    .uploader {
-      margin-top: 16px;
-      background: #101010;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px;
-      transition: all 0.15s ease;
-    }
-
-    .dropzone {
-      border: 2px dashed var(--border);
-      border-radius: 12px;
-      min-height: 110px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      color: var(--muted);
-      padding: 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: "DM Mono", monospace;
-      background: #121212;
-    }
-
-    .dropzone.dragover {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: #161616;
-      box-shadow: 0 0 0 1px var(--accent) inset;
-    }
-
-    .upload-grid {
-      margin-top: 12px;
-      display: grid;
-      gap: 10px;
-      grid-template-columns: 1fr;
-    }
-
-    .input,
-    .button {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #131313;
-      color: var(--text);
-      padding: 10px 12px;
-      transition: all 0.15s ease;
-      font-size: 14px;
-    }
-
-    .input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .button {
-      cursor: pointer;
-      font-weight: 700;
-      background: var(--accent);
-      color: #151515;
-      border-color: #d3ec2f;
-    }
-
-    .button:hover:not(:disabled) {
-      filter: brightness(1.08);
-    }
-
-    .button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .ghost-btn {
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: #171717;
-      color: var(--text);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 13px;
-      transition: all 0.15s ease;
-    }
-
-    .ghost-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .file-info {
-      margin: 10px 0 8px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .gallery {
-      margin-top: 18px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      transition: all 0.15s ease;
-      position: relative;
-    }
-
-    .card:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-    }
-
-    .thumb {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      display: block;
-      background: #0b0b0b;
-    }
-
-    .card-body {
-      padding: 10px;
-    }
-
-    .title {
-      margin: 0 0 8px;
-      font-size: 14px;
-      font-weight: 500;
-      word-break: break-word;
-    }
-
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .tag {
-      border: 1px solid #323232;
-      background: #2a2a2a;
-      color: #d7d7d7;
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-family: "DM Mono", monospace;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .tag.active,
-    .tag:hover {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #151515;
-    }
-
-    .card-actions {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      display: flex;
-      gap: 6px;
-      opacity: 0;
-      transition: all 0.15s ease;
-    }
-
-    .card:hover .card-actions,
-    .card:focus-within .card-actions {
-      opacity: 1;
-    }
-
-    .icon-btn {
-      border: 1px solid #2f2f2f;
-      background: rgba(20, 20, 20, 0.92);
-      color: #ececec;
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-size: 14px;
-    }
-
-    .icon-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .empty {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .toast {
-      position: fixed;
-      right: 14px;
-      bottom: 14px;
-      background: #161616;
-      border: 1px solid var(--accent);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      opacity: 0;
-      transform: translateY(8px);
-      pointer-events: none;
-      transition: all 0.15s ease;
-      z-index: 50;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .viewer {
-      position: fixed;
-      inset: 0;
-      background: rgba(6, 6, 6, 0.92);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      z-index: 60;
-    }
-
-    .viewer.open {
-      display: flex;
-    }
-
-    .viewer-panel {
-      width: min(980px, 100%);
-      background: #121212;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-
-    .viewer-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .viewer-title {
-      margin: 0;
-      font-family: "DM Mono", monospace;
-      font-size: 13px;
-      color: #d6d6d6;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .viewer-controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .viewer-stage {
-      width: 100%;
-      max-height: 70vh;
-      background: #0f0f0f;
-      display: grid;
-      place-items: center;
-    }
-
-    .viewer-image {
-      max-width: 100%;
-      max-height: 70vh;
-      object-fit: contain;
-      display: block;
-    }
-
-    .viewer-bottom {
-      padding: 10px 12px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .viewer-tags {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .viewer-btn {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: #171717;
-      color: var(--text);
-      padding: 8px 10px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s ease;
-      font-size: 13px;
-      line-height: 1;
-    }
-
-    .viewer-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    @media (min-width: 880px) {
-      .upload-grid {
-        grid-template-columns: 1fr 1fr auto;
-      }
-
-      .gallery {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .gallery {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Meme Deposu</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --bg: #0d0d0d;
+  --card: #1a1a1a;
+  --accent: #e8ff47;
+  --text: #f0f0f0;
+  --muted: #888;
+  --border: #2a2a2a;
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0d0d0d;
+  color: var(--text);
+  font-family: "DM Sans", sans-serif;
+  min-height: 100vh;
+}
+.container {
+  width: min(1200px, 100% - 24px);
+  margin: 0 auto;
+  padding: 24px 0 80px;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+h1 {
+  font-family: "DM Mono", monospace;
+  font-size: clamp(20px, 3vw, 30px);
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.search-wrap { flex: 1; min-width: 200px; }
+.search {
+  width: 100%;
+  border: 0;
+  border-bottom: 2px solid var(--accent);
+  background: #111;
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: "DM Sans", sans-serif;
+  outline: none;
+  border-radius: 8px 8px 0 0;
+  transition: background 0.15s;
+}
+.search:focus { background: #161616; }
+.search::placeholder { color: var(--muted); }
+.uploader {
+  background: #111;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.dropzone {
+  border: 2px dashed #333;
+  border-radius: 10px;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: "DM Mono", monospace;
+  font-size: 14px;
+  user-select: none;
+}
+.dropzone.dragover { border-color: var(--accent); color: var(--accent); background: #161616; }
+.dropzone:hover { border-color: #555; }
+.preview-wrap { margin-top: 12px; display: none; align-items: center; gap: 12px; }
+.preview-wrap.visible { display: flex; }
+#previewImg { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.preview-name { font-size: 13px; color: var(--muted); word-break: break-all; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+@media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+.input {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: "DM Sans", sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--muted); }
+.btn-row { display: flex; gap: 10px; margin-top: 12px; }
+.btn-pick {
+  border: 1px solid var(--border);
+  background: #1a1a1a;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: "DM Sans", sans-serif;
+  white-space: nowrap;
+}
+.btn-pick:hover { border-color: #666; }
+.btn-upload {
+  flex: 1;
+  background: var(--accent);
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: "DM Sans", sans-serif;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.btn-upload:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
+.progress-wrap { display: none; margin-top: 10px; height: 3px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.progress-wrap.visible { display: block; }
+.progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; border-radius: 999px; }
+.gallery-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.gallery-count { font-family: "DM Mono", monospace; font-size: 12px; color: var(--muted); }
+.gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (min-width: 640px) { .gallery { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) { .gallery { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1200px) { .gallery { grid-template-columns: repeat(5, 1fr); } }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+  position: relative;
+  animation: fadeIn 0.2s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.thumb { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #111; }
+.card-footer { padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.card-title { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  background: #252525;
+  border: 1px solid #333;
+  color: #bbb;
+  border-radius: 999px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tag:hover, .tag.active { background: var(--accent); border-color: var(--accent); color: #111; }
+.card-actions { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.card:hover .card-actions { opacity: 1; }
+.icon-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(10,10,10,0.85);
+  color: #ddd;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); font-family: "DM Mono", monospace; font-size: 14px; }
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: #1e1e1e; border: 1px solid var(--accent);
+  color: var(--text); padding: 10px 16px; border-radius: 10px;
+  font-size: 13px; z-index: 999; opacity: 0; transform: translateY(8px);
+  transition: all 0.15s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: none; }
+.lb {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+  z-index: 900; display: none; align-items: center; justify-content: center; padding: 16px;
+}
+.lb.open { display: flex; }
+.lb-panel {
+  background: #141414; border: 1px solid #2a2a2a; border-radius: 14px;
+  overflow: hidden; width: min(900px, 100%); max-height: 90vh; display: flex; flex-direction: column;
+}
+.lb-top {
+  padding: 10px 14px; border-bottom: 1px solid #222;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0;
+}
+.lb-title { font-family: "DM Mono", monospace; font-size: 13px; color: #ccc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-controls { display: flex; gap: 6px; flex-shrink: 0; }
+.lb-btn {
+  border: 1px solid #2a2a2a; background: #1a1a1a; color: var(--text);
+  border-radius: 8px; padding: 6px 10px; font-size: 13px;
+  font-family: "DM Sans", sans-serif; cursor: pointer; transition: all 0.15s;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+}
+.lb-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lb-img-wrap {
+  flex: 1; overflow: hidden; display: flex; align-items: center;
+  justify-content: center; background: #0d0d0d; min-height: 200px;
+}
+#lbImg { max-width: 100%; max-height: calc(90vh - 130px); object-fit: contain; display: block; }
+.lb-bottom {
+  padding: 10px 14px; border-top: 1px solid #222;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; flex-shrink: 0;
+}
+.lb-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.lb-nav { display: flex; gap: 6px; }
+</style>
 </head>
 <body>
-  <main class="container">
-    <div class="topbar">
-      <h1>MEME DEPOT</h1>
+<div class="container">
+  <header>
+    <h1>MEME DEPOT</h1>
+    <div class="search-wrap">
+      <input id="searchInput" class="search" type="text" placeholder="Başlık veya etiket ara..." autocomplete="off" />
     </div>
+  </header>
 
-    <input id="searchInput" class="search" type="text" placeholder="Başlık veya etiket ara..." />
+  <div class="uploader">
+    <div id="dropzone" class="dropzone" tabindex="0">
+      <span>Görseli buraya sürükle &nbsp;·&nbsp; veya aşağıdan seç</span>
+    </div>
+    <div id="previewWrap" class="preview-wrap">
+      <img id="previewImg" src="" alt="önizleme" />
+      <span id="previewName" class="preview-name"></span>
+    </div>
+    <div class="form-row">
+      <input id="titleInput" class="input" type="text" placeholder="Başlık (opsiyonel)" maxlength="140" />
+      <input id="tagsInput" class="input" type="text" placeholder="Etiketler: kedi, komik, günlük" />
+    </div>
+    <div class="btn-row">
+      <button id="pickBtn" class="btn-pick" type="button">📁 Dosya Seç</button>
+      <button id="uploadBtn" class="btn-upload" type="button">Yükle</button>
+    </div>
+    <div id="progressWrap" class="progress-wrap">
+      <div id="progressBar" class="progress-bar"></div>
+    </div>
+    <input id="fileInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden />
+  </div>
 
-    <section class="uploader">
-      <div id="dropzone" class="dropzone" role="button" tabindex="0">
-        <div>
-          <strong>Dosyayı buraya bırak</strong><br />
-          veya görsel seç
-        </div>
-      </div>
-      <div class="upload-grid">
-        <button id="pickFileBtn" class="ghost-btn" type="button">Dosya Seç (JPG/PNG/GIF/WEBP)</button>
-        <input id="titleInput" class="input" type="text" placeholder="Başlık (opsiyonel)" maxlength="140" />
-        <input id="tagsInput" class="input" type="text" placeholder="Etiketler (kedi, komik, günlük)" />
-      </div>
-      <p id="fileInfo" class="file-info">Seçili dosya yok.</p>
-      <button id="uploadBtn" class="button" type="button">Yükle</button>
-      <input id="fileInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden />
-    </section>
+  <div class="gallery-header">
+    <span id="galleryCount" class="gallery-count"></span>
+  </div>
+  <div id="gallery" class="gallery"></div>
+  <div id="emptyState" class="empty" style="display:none">Henüz meme yok. İlkini yükle!</div>
+</div>
 
-    <section id="gallery" class="gallery"></section>
-    <p id="emptyState" class="empty" hidden>Gösterilecek meme bulunamadı.</p>
-  </main>
+<div id="toast" class="toast"></div>
 
-  <div id="toast" class="toast"></div>
-  <div id="viewer" class="viewer" aria-hidden="true">
-    <div class="viewer-panel" role="dialog" aria-modal="true" aria-label="Meme önizleme">
-      <div class="viewer-top">
-        <p id="viewerTitle" class="viewer-title">Önizleme</p>
-        <div class="viewer-controls">
-          <button id="viewerPrevBtn" type="button" class="viewer-btn" title="Önceki">←</button>
-          <button id="viewerNextBtn" type="button" class="viewer-btn" title="Sonraki">→</button>
-          <button id="viewerCloseBtn" type="button" class="viewer-btn" title="Kapat">Kapat</button>
-        </div>
+<div id="lb" class="lb">
+  <div class="lb-panel">
+    <div class="lb-top">
+      <span id="lbTitle" class="lb-title">Önizleme</span>
+      <div class="lb-controls">
+        <button id="lbCopy" class="lb-btn" type="button">⎘ Link</button>
+        <a id="lbDownload" class="lb-btn" href="#" download>⬇ İndir</a>
+        <button id="lbClose" class="lb-btn" type="button">✕ Kapat</button>
       </div>
-      <div class="viewer-stage">
-        <img id="viewerImage" class="viewer-image" src="" alt="" />
-      </div>
-      <div class="viewer-bottom">
-        <div id="viewerTags" class="viewer-tags"></div>
-        <a id="viewerDownloadBtn" class="viewer-btn" href="#" download target="_blank" rel="noopener noreferrer">İndir</a>
+    </div>
+    <div class="lb-img-wrap">
+      <img id="lbImg" src="" alt="" />
+    </div>
+    <div class="lb-bottom">
+      <div id="lbTags" class="lb-tags"></div>
+      <div class="lb-nav">
+        <button id="lbPrev" class="lb-btn" type="button">← Önceki</button>
+        <button id="lbNext" class="lb-btn" type="button">Sonraki →</button>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    const runtimeConfig = window.__MEME_DEPOT_CONFIG__ || {};
-    const SUPABASE_URL = String(runtimeConfig.SUPABASE_URL || "").trim();
-    const SUPABASE_KEY = String(runtimeConfig.SUPABASE_KEY || "").trim();
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+// Supabase bilgilerini buraya yaz (Vercel env ile çalışmaz, doğrudan yaz):
+const SUPABASE_URL = "BURAYA_SUPABASE_URL_YAZ";
+const SUPABASE_KEY = "BURAYA_ANON_KEY_YAZ";
+// ─────────────────────────────────────────────────────────────────────────────
 
-    const isPlaceholderConfig =
-      !SUPABASE_URL ||
-      !SUPABASE_KEY ||
-      SUPABASE_URL.includes("XXXX") ||
-      SUPABASE_KEY.includes("XXXX");
-    const hasSupabaseLib = !!(window.supabase && window.supabase.createClient);
-    const supabase =
-      hasSupabaseLib && !isPlaceholderConfig
-        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-        : null;
-    const BUCKET = "memes";
-    const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
+const BUCKET = "memes";
+const ALLOWED = new Set(["image/jpeg","image/png","image/gif","image/webp"]);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const searchInput = document.getElementById("searchInput");
-    const dropzone = document.getElementById("dropzone");
-    const pickFileBtn = document.getElementById("pickFileBtn");
-    const fileInput = document.getElementById("fileInput");
-    const fileInfo = document.getElementById("fileInfo");
-    const titleInput = document.getElementById("titleInput");
-    const tagsInput = document.getElementById("tagsInput");
-    const uploadBtn = document.getElementById("uploadBtn");
-    const gallery = document.getElementById("gallery");
-    const emptyState = document.getElementById("emptyState");
-    const toast = document.getElementById("toast");
-    const viewer = document.getElementById("viewer");
-    const viewerImage = document.getElementById("viewerImage");
-    const viewerTitle = document.getElementById("viewerTitle");
-    const viewerTags = document.getElementById("viewerTags");
-    const viewerDownloadBtn = document.getElementById("viewerDownloadBtn");
-    const viewerCloseBtn = document.getElementById("viewerCloseBtn");
-    const viewerPrevBtn = document.getElementById("viewerPrevBtn");
-    const viewerNextBtn = document.getElementById("viewerNextBtn");
+const $ = id => document.getElementById(id);
+const dropzone    = $("dropzone"),    fileInput   = $("fileInput"),
+      pickBtn     = $("pickBtn"),     previewWrap = $("previewWrap"),
+      previewImg  = $("previewImg"),  previewName = $("previewName"),
+      titleInput  = $("titleInput"), tagsInput   = $("tagsInput"),
+      uploadBtn   = $("uploadBtn"),   progressWrap= $("progressWrap"),
+      progressBar = $("progressBar"), gallery     = $("gallery"),
+      emptyState  = $("emptyState"),  galleryCount= $("galleryCount"),
+      searchInput = $("searchInput"), toastEl     = $("toast"),
+      lb          = $("lb"),          lbImg       = $("lbImg"),
+      lbTitle     = $("lbTitle"),     lbTags      = $("lbTags"),
+      lbDownload  = $("lbDownload"),  lbCopy      = $("lbCopy"),
+      lbClose     = $("lbClose"),     lbPrev      = $("lbPrev"),
+      lbNext      = $("lbNext");
 
-    let memes = [];
-    let selectedFile = null;
-    let activeTag = "";
-    let toastTimer = null;
-    let activeViewerIndex = -1;
+let memes = [], currentIdx = -1, selectedFile = null, toastTimer = null, searchTimer = null, activeTag = "";
 
-    function isSupabaseReady() {
-      if (!hasSupabaseLib) {
-        showToast("Supabase kütüphanesi yüklenemedi.");
-        return false;
-      }
-      if (isPlaceholderConfig || !supabase) {
-        showToast("Supabase ayarları eksik. URL ve anon key girin.");
-        return false;
-      }
-      return true;
-    }
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2400);
+}
 
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add("show");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-      }, 2000);
-    }
+// ── FILE SELECTION ────────────────────────────────────────────────────────────
+function setFile(file) {
+  if (!file) return;
+  if (!ALLOWED.has(file.type)) { toast("Sadece JPG, PNG, GIF veya WEBP yükleyebilirsin."); return; }
+  selectedFile = file;
+  previewImg.src = URL.createObjectURL(file);
+  previewName.textContent = file.name;
+  previewWrap.classList.add("visible");
+}
 
-    function setSelectedFile(file) {
-      selectedFile = file;
-      fileInfo.textContent = file ? `Seçili dosya: ${file.name}` : "Seçili dosya yok.";
-    }
+pickBtn.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => fileInput.files[0] && setFile(fileInput.files[0]));
+dropzone.addEventListener("click", () => fileInput.click());
+dropzone.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" ") { e.preventDefault(); fileInput.click(); } });
+dropzone.addEventListener("dragenter", e => { e.preventDefault(); dropzone.classList.add("dragover"); });
+dropzone.addEventListener("dragover",  e => { e.preventDefault(); dropzone.classList.add("dragover"); });
+dropzone.addEventListener("dragleave", e => { e.preventDefault(); dropzone.classList.remove("dragover"); });
+dropzone.addEventListener("drop", e => {
+  e.preventDefault(); dropzone.classList.remove("dragover");
+  const f = e.dataTransfer?.files?.[0]; if (f) setFile(f);
+});
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => e.preventDefault());
 
-    function sanitizeFilename(name) {
-      return name
-        .toLowerCase()
-        .replace(/[^a-z0-9._-]+/g, "_")
-        .replace(/_+/g, "_")
-        .replace(/^_+|_+$/g, "");
-    }
+// ── PROGRESS ──────────────────────────────────────────────────────────────────
+function setProgress(p) {
+  progressBar.style.width = p + "%";
+  progressWrap.classList.toggle("visible", p > 0 && p < 100);
+}
 
-    function parseTags(raw) {
-      return raw
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-    }
+// ── UPLOAD ────────────────────────────────────────────────────────────────────
+uploadBtn.addEventListener("click", async () => {
+  if (!selectedFile) { toast("Önce bir görsel seç."); return; }
+  uploadBtn.disabled = true; uploadBtn.textContent = "Yükleniyor..."; setProgress(15);
+  try {
+    const ext = (selectedFile.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi,"");
+    const path = `public/${Date.now()}.${ext}`;
+    setProgress(35);
+    const { error: upErr } = await sb.storage.from(BUCKET).upload(path, selectedFile, { cacheControl:"3600", upsert:false, contentType:selectedFile.type });
+    if (upErr) throw upErr;
+    setProgress(70);
+    const url = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+    const tags = tagsInput.value.split(",").map(t=>t.trim()).filter(Boolean);
+    const { data, error: insErr } = await sb.from("memes").insert({ title: titleInput.value.trim()||null, url, tags }).select("id,title,url,tags,created_at").single();
+    if (insErr) throw insErr;
+    setProgress(100); setTimeout(() => setProgress(0), 600);
+    titleInput.value = ""; tagsInput.value = ""; fileInput.value = "";
+    selectedFile = null; previewWrap.classList.remove("visible"); previewImg.src = ""; activeTag = "";
+    if (data) { memes = [data, ...memes]; renderGallery(memes); }
+    toast("✓ Meme yüklendi!");
+  } catch(err) {
+    console.error(err); setProgress(0); toast("Hata: " + (err.message||"bilinmeyen"));
+  } finally {
+    uploadBtn.disabled = false; uploadBtn.textContent = "Yükle";
+  }
+});
 
-    function escapeHtml(value) {
-      return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
+// ── GALLERY ───────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
-    function makeCard(meme) {
-      const wrapper = document.createElement("article");
-      wrapper.className = "card";
-
-      const safeTitle = meme.title ? escapeHtml(meme.title) : "Başlıksız";
-      const tags = Array.isArray(meme.tags) ? meme.tags : [];
-      const tagsHtml = tags.length
-        ? tags
-            .map((tag) => {
-              const activeClass = activeTag === tag ? "active" : "";
-              return `<button class="tag ${activeClass}" type="button" data-tag="${escapeHtml(tag)}">#${escapeHtml(tag)}</button>`;
-            })
-            .join("")
-        : "<span class=\"tag\" style=\"cursor:default;opacity:.65\">etiketsiz</span>";
-
-      wrapper.innerHTML = `
-        <div class="card-actions">
-          <button class="icon-btn" type="button" data-action="copy" title="Link kopyala">⎘</button>
-          <button class="icon-btn" type="button" data-action="delete" title="Sil">🗑</button>
-        </div>
-        <img class="thumb" src="${escapeHtml(meme.url)}" alt="${safeTitle}" loading="lazy" />
-        <div class="card-body">
-          <p class="title">${safeTitle}</p>
-          <div class="tags">${tagsHtml}</div>
-        </div>
-      `;
-
-      wrapper.addEventListener("click", async (event) => {
-        const target = event.target.closest("button");
-        if (!target) {
-          const idx = memes.findIndex((m) => m.id === meme.id);
-          if (idx >= 0) {
-            openViewer(idx);
-          }
-          return;
-        }
-
-        const action = target.dataset.action;
-        if (action === "copy") {
+function renderGallery(list) {
+  gallery.innerHTML = "";
+  galleryCount.textContent = list.length ? `${list.length} meme` : "";
+  emptyState.style.display = list.length ? "none" : "block";
+  list.forEach(m => {
+    const card = document.createElement("article");
+    card.className = "card";
+    const tags = Array.isArray(m.tags) ? m.tags : [];
+    card.innerHTML = `
+      <img class="thumb" src="${esc(m.url)}" alt="${esc(m.title||"meme")}" loading="lazy" />
+      <div class="card-footer">
+        <div class="card-title">${esc(m.title||"Başlıksız")}</div>
+        <div class="tags">${tags.map(t=>`<span class="tag${activeTag===t?" active":""}" data-tag="${esc(t)}">#${esc(t)}</span>`).join("")}</div>
+      </div>
+      <div class="card-actions">
+        <button class="icon-btn" data-action="copy" title="Linki kopyala">⎘</button>
+        <button class="icon-btn" data-action="del" title="Sil">🗑</button>
+      </div>`;
+    card.addEventListener("click", async e => {
+      const ab = e.target.closest("[data-action]");
+      const te = e.target.closest("[data-tag]");
+      if (ab) {
+        e.stopPropagation();
+        if (ab.dataset.action === "copy") {
+          try { await navigator.clipboard.writeText(m.url); toast("Link kopyalandı!"); } catch { toast("Kopyalanamadı."); }
+        } else if (ab.dataset.action === "del") {
+          if (!confirm("Bu meme silinsin mi?")) return;
           try {
-            await navigator.clipboard.writeText(meme.url);
-            showToast("Kopyalandı!");
-          } catch (err) {
-            console.error(err);
-            showToast("Link kopyalanamadı.");
-          }
-          return;
+            // Extract storage path correctly
+            const marker = `/object/public/${BUCKET}/`;
+            const idx2 = m.url.indexOf(marker);
+            const storagePath = idx2 >= 0 ? m.url.slice(idx2 + marker.length) : null;
+            if (storagePath) await sb.storage.from(BUCKET).remove([storagePath]);
+            await sb.from("memes").delete().eq("id", m.id);
+            memes = memes.filter(x => x.id !== m.id);
+            renderGallery(memes); toast("Meme silindi.");
+          } catch(err) { console.error(err); toast("Silme hatası: " + (err.message||"")); }
         }
-
-        if (action === "delete") {
-          if (!isSupabaseReady()) return;
-          const ok = confirm("Bu meme silinsin mi?");
-          if (!ok) return;
-
-          try {
-            const path = meme.url.split("/memes/")[1];
-            if (!path) throw new Error("Storage yolu bulunamadı");
-
-            const { error: storageError } = await supabase.storage.from(BUCKET).remove([path]);
-            if (storageError) throw storageError;
-
-            const { error: dbError } = await supabase.from("memes").delete().eq("id", meme.id);
-            if (dbError) throw dbError;
-
-            memes = memes.filter((m) => m.id !== meme.id);
-            renderGallery(memes);
-            showToast("Meme silindi.");
-          } catch (err) {
-            console.error(err);
-            showToast("Silme işlemi başarısız oldu.");
-          }
-          return;
-        }
-
-        if (target.dataset.tag !== undefined) {
-          const tag = target.dataset.tag || "";
-          if (activeTag === tag) {
-            activeTag = "";
-            searchInput.value = "";
-            fetchMemes("");
-          } else {
-            activeTag = tag;
-            searchInput.value = tag;
-            fetchMemes(tag);
-          }
-        }
-      });
-
-      return wrapper;
-    }
-
-    function getDownloadName(meme) {
-      const fromUrl = meme.url.split("?")[0].split("/").pop() || "meme";
-      return fromUrl.replace(/[^a-zA-Z0-9._-]+/g, "_");
-    }
-
-    function renderViewer(index) {
-      if (!memes.length) return;
-      const safeIndex = (index + memes.length) % memes.length;
-      const meme = memes[safeIndex];
-      activeViewerIndex = safeIndex;
-
-      const title = meme.title || "Başlıksız";
-      viewerTitle.textContent = title;
-      viewerImage.src = meme.url;
-      viewerImage.alt = title;
-      viewerDownloadBtn.href = meme.url;
-      viewerDownloadBtn.setAttribute("download", getDownloadName(meme));
-
-      const tags = Array.isArray(meme.tags) ? meme.tags : [];
-      viewerTags.innerHTML = tags.length
-        ? tags.map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`).join("")
-        : "<span class=\"tag\" style=\"cursor:default;opacity:.65\">etiketsiz</span>";
-    }
-
-    function openViewer(index) {
-      renderViewer(index);
-      viewer.classList.add("open");
-      viewer.setAttribute("aria-hidden", "false");
-    }
-
-    function closeViewer() {
-      viewer.classList.remove("open");
-      viewer.setAttribute("aria-hidden", "true");
-      viewerImage.src = "";
-      activeViewerIndex = -1;
-    }
-
-    function renderGallery(items) {
-      gallery.innerHTML = "";
-      if (!items.length) {
-        emptyState.hidden = false;
         return;
       }
-      emptyState.hidden = true;
-      items.forEach((meme) => gallery.appendChild(makeCard(meme)));
-    }
-
-    async function fetchMemes(query = "") {
-      if (!isSupabaseReady()) {
-        memes = [];
-        renderGallery(memes);
+      if (te) {
+        e.stopPropagation();
+        const t = te.dataset.tag;
+        if (activeTag === t) { activeTag = ""; searchInput.value = ""; fetchMemes(""); }
+        else { activeTag = t; searchInput.value = t; fetchMemes(t); }
         return;
       }
-      try {
-        const q = query.trim();
-        let builder = supabase
-          .from("memes")
-          .select("id,title,url,tags,created_at")
-          .order("created_at", { ascending: false });
-
-        if (q) {
-          const escaped = q.replace(/[{}",]/g, "");
-          builder = builder.or(`title.ilike.%${q}%,tags.cs.{${escaped}}`);
-        }
-
-        const { data, error } = await builder;
-        if (error) throw error;
-
-        memes = data || [];
-        renderGallery(memes);
-      } catch (err) {
-        console.error(err);
-        showToast("Memeler yüklenirken hata oluştu.");
-      }
-    }
-
-    async function handleUpload() {
-      if (!isSupabaseReady()) return;
-      if (!selectedFile) {
-        showToast("Lütfen önce bir görsel seçin.");
-        return;
-      }
-      if (!ALLOWED_TYPES.has(selectedFile.type)) {
-        showToast("Desteklenmeyen dosya türü.");
-        return;
-      }
-
-      uploadBtn.disabled = true;
-      uploadBtn.textContent = "Yükleniyor...";
-
-      try {
-        const cleanName = sanitizeFilename(selectedFile.name || "meme");
-        const path = `public/${Date.now()}_${cleanName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from(BUCKET)
-          .upload(path, selectedFile, { upsert: false });
-        if (uploadError) throw uploadError;
-
-        const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/memes/${path}`;
-        const tags = parseTags(tagsInput.value);
-
-        const payload = {
-          title: titleInput.value.trim() || null,
-          url: publicUrl,
-          tags
-        };
-
-        const { data, error: insertError } = await supabase
-          .from("memes")
-          .insert(payload)
-          .select("id,title,url,tags,created_at")
-          .single();
-        if (insertError) throw insertError;
-
-        titleInput.value = "";
-        tagsInput.value = "";
-        fileInput.value = "";
-        setSelectedFile(null);
-        activeTag = "";
-
-        memes = data ? [data, ...memes] : memes;
-        renderGallery(memes);
-        showToast("Meme yüklendi.");
-      } catch (err) {
-        console.error(err);
-        showToast("Yükleme sırasında hata oluştu.");
-      } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = "Yükle";
-      }
-    }
-
-    function onDrop(file) {
-      if (!file) return;
-      if (!ALLOWED_TYPES.has(file.type)) {
-        showToast("Sadece JPG, PNG, GIF veya WEBP yükleyebilirsiniz.");
-        return;
-      }
-      setSelectedFile(file);
-    }
-
-    pickFileBtn.addEventListener("click", () => fileInput.click());
-
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files && fileInput.files[0];
-      onDrop(file);
+      const idx = memes.findIndex(x => x.id === m.id);
+      if (idx >= 0) openLb(idx);
     });
+    gallery.appendChild(card);
+  });
+}
 
-    dropzone.addEventListener("click", () => fileInput.click());
-    dropzone.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        fileInput.click();
-      }
-    });
+// ── FETCH ─────────────────────────────────────────────────────────────────────
+async function fetchMemes(q = "") {
+  try {
+    let b = sb.from("memes").select("id,title,url,tags,created_at").order("created_at",{ascending:false});
+    if (q.trim()) { const s = q.trim().replace(/[{}",]/g,""); b = b.or(`title.ilike.%${s}%,tags.cs.{${s}}`); }
+    const { data, error } = await b;
+    if (error) throw error;
+    memes = data || []; renderGallery(memes);
+  } catch(err) { console.error(err); toast("Yükleme hatası: " + (err.message||"")); }
+}
 
-    ["dragenter", "dragover"].forEach((name) => {
-      dropzone.addEventListener(name, (event) => {
-        event.preventDefault();
-        dropzone.classList.add("dragover");
-      });
-    });
+searchInput.addEventListener("input", e => {
+  activeTag = ""; clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => fetchMemes(e.target.value), 150);
+});
 
-    // Dropzone dışına dosya bırakıldığında tarayıcının dosyayı açmasını engeller.
-    window.addEventListener("dragover", (event) => event.preventDefault());
-    window.addEventListener("drop", (event) => event.preventDefault());
+// ── LIGHTBOX ──────────────────────────────────────────────────────────────────
+function openLb(idx) {
+  currentIdx = idx;
+  const m = memes[idx];
+  lbImg.src = m.url; lbImg.alt = m.title||"meme";
+  lbTitle.textContent = m.title||"Başlıksız";
+  lbDownload.href = m.url; lbDownload.setAttribute("download", `meme_${m.id}`);
+  const tags = Array.isArray(m.tags) ? m.tags : [];
+  lbTags.innerHTML = tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join("") || `<span style="color:var(--muted);font-size:12px">etiketsiz</span>`;
+  lb.classList.add("open");
+}
+function closeLb() { lb.classList.remove("open"); lbImg.src = ""; currentIdx = -1; }
+function lbNav(d) { if (!memes.length) return; openLb((currentIdx+d+memes.length)%memes.length); }
 
-    ["dragleave", "drop"].forEach((name) => {
-      dropzone.addEventListener(name, (event) => {
-        event.preventDefault();
-        dropzone.classList.remove("dragover");
-      });
-    });
+lbClose.addEventListener("click", closeLb);
+lbPrev.addEventListener("click", () => lbNav(-1));
+lbNext.addEventListener("click", () => lbNav(1));
+lb.addEventListener("click", e => { if (e.target === lb) closeLb(); });
+lbCopy.addEventListener("click", async () => {
+  if (currentIdx < 0) return;
+  try { await navigator.clipboard.writeText(memes[currentIdx].url); toast("Link kopyalandı!"); } catch { toast("Kopyalanamadı."); }
+});
+window.addEventListener("keydown", e => {
+  if (!lb.classList.contains("open")) return;
+  if (e.key==="Escape") closeLb();
+  if (e.key==="ArrowLeft") lbNav(-1);
+  if (e.key==="ArrowRight") lbNav(1);
+});
 
-    dropzone.addEventListener("drop", (event) => {
-      const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-      onDrop(file);
-    });
-
-    let searchTimer = null;
-    searchInput.addEventListener("input", (event) => {
-      const q = event.target.value;
-      activeTag = "";
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => fetchMemes(q), 120);
-    });
-
-    uploadBtn.addEventListener("click", handleUpload);
-    viewerCloseBtn.addEventListener("click", closeViewer);
-    viewerPrevBtn.addEventListener("click", () => {
-      if (!memes.length || activeViewerIndex < 0) return;
-      renderViewer(activeViewerIndex - 1);
-    });
-    viewerNextBtn.addEventListener("click", () => {
-      if (!memes.length || activeViewerIndex < 0) return;
-      renderViewer(activeViewerIndex + 1);
-    });
-    viewer.addEventListener("click", (event) => {
-      if (event.target === viewer) {
-        closeViewer();
-      }
-    });
-    window.addEventListener("keydown", (event) => {
-      if (!viewer.classList.contains("open")) return;
-      if (event.key === "Escape") closeViewer();
-      if (event.key === "ArrowLeft") renderViewer(activeViewerIndex - 1);
-      if (event.key === "ArrowRight") renderViewer(activeViewerIndex + 1);
-    });
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch((err) => {
-        console.error("Service Worker kaydı başarısız:", err);
-      });
-    }
-
-    if (isPlaceholderConfig) {
-      showToast("Supabase ayarı eksik. Vercel env değişkenlerini kontrol edin.");
-    }
-
-    fetchMemes();
-  </script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(()=>{});
+fetchMemes();
+</script>
 </body>
 </html>
