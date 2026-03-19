@@ -296,6 +296,103 @@
       transform: translateY(0);
     }
 
+    .viewer {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 6, 6, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 60;
+    }
+
+    .viewer.open {
+      display: flex;
+    }
+
+    .viewer-panel {
+      width: min(980px, 100%);
+      background: #121212;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .viewer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .viewer-title {
+      margin: 0;
+      font-family: "DM Mono", monospace;
+      font-size: 13px;
+      color: #d6d6d6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .viewer-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .viewer-stage {
+      width: 100%;
+      max-height: 70vh;
+      background: #0f0f0f;
+      display: grid;
+      place-items: center;
+    }
+
+    .viewer-image {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    .viewer-bottom {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .viewer-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .viewer-btn {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #171717;
+      color: var(--text);
+      padding: 8px 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .viewer-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
     @media (min-width: 880px) {
       .upload-grid {
         grid-template-columns: 1fr 1fr auto;
@@ -343,6 +440,25 @@
   </main>
 
   <div id="toast" class="toast"></div>
+  <div id="viewer" class="viewer" aria-hidden="true">
+    <div class="viewer-panel" role="dialog" aria-modal="true" aria-label="Meme önizleme">
+      <div class="viewer-top">
+        <p id="viewerTitle" class="viewer-title">Önizleme</p>
+        <div class="viewer-controls">
+          <button id="viewerPrevBtn" type="button" class="viewer-btn" title="Önceki">←</button>
+          <button id="viewerNextBtn" type="button" class="viewer-btn" title="Sonraki">→</button>
+          <button id="viewerCloseBtn" type="button" class="viewer-btn" title="Kapat">Kapat</button>
+        </div>
+      </div>
+      <div class="viewer-stage">
+        <img id="viewerImage" class="viewer-image" src="" alt="" />
+      </div>
+      <div class="viewer-bottom">
+        <div id="viewerTags" class="viewer-tags"></div>
+        <a id="viewerDownloadBtn" class="viewer-btn" href="#" download target="_blank" rel="noopener noreferrer">İndir</a>
+      </div>
+    </div>
+  </div>
 
   <script>
     const isPlaceholderConfig =
@@ -366,11 +482,20 @@
     const gallery = document.getElementById("gallery");
     const emptyState = document.getElementById("emptyState");
     const toast = document.getElementById("toast");
+    const viewer = document.getElementById("viewer");
+    const viewerImage = document.getElementById("viewerImage");
+    const viewerTitle = document.getElementById("viewerTitle");
+    const viewerTags = document.getElementById("viewerTags");
+    const viewerDownloadBtn = document.getElementById("viewerDownloadBtn");
+    const viewerCloseBtn = document.getElementById("viewerCloseBtn");
+    const viewerPrevBtn = document.getElementById("viewerPrevBtn");
+    const viewerNextBtn = document.getElementById("viewerNextBtn");
 
     let memes = [];
     let selectedFile = null;
     let activeTag = "";
     let toastTimer = null;
+    let activeViewerIndex = -1;
 
     function isSupabaseReady() {
       if (!hasSupabaseLib) {
@@ -451,7 +576,13 @@
 
       wrapper.addEventListener("click", async (event) => {
         const target = event.target.closest("button");
-        if (!target) return;
+        if (!target) {
+          const idx = memes.findIndex((m) => m.id === meme.id);
+          if (idx >= 0) {
+            openViewer(idx);
+          }
+          return;
+        }
 
         const action = target.dataset.action;
         if (action === "copy") {
@@ -505,6 +636,43 @@
       });
 
       return wrapper;
+    }
+
+    function getDownloadName(meme) {
+      const fromUrl = meme.url.split("?")[0].split("/").pop() || "meme";
+      return fromUrl.replace(/[^a-zA-Z0-9._-]+/g, "_");
+    }
+
+    function renderViewer(index) {
+      if (!memes.length) return;
+      const safeIndex = (index + memes.length) % memes.length;
+      const meme = memes[safeIndex];
+      activeViewerIndex = safeIndex;
+
+      const title = meme.title || "Başlıksız";
+      viewerTitle.textContent = title;
+      viewerImage.src = meme.url;
+      viewerImage.alt = title;
+      viewerDownloadBtn.href = meme.url;
+      viewerDownloadBtn.setAttribute("download", getDownloadName(meme));
+
+      const tags = Array.isArray(meme.tags) ? meme.tags : [];
+      viewerTags.innerHTML = tags.length
+        ? tags.map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`).join("")
+        : "<span class=\"tag\" style=\"cursor:default;opacity:.65\">etiketsiz</span>";
+    }
+
+    function openViewer(index) {
+      renderViewer(index);
+      viewer.classList.add("open");
+      viewer.setAttribute("aria-hidden", "false");
+    }
+
+    function closeViewer() {
+      viewer.classList.remove("open");
+      viewer.setAttribute("aria-hidden", "true");
+      viewerImage.src = "";
+      activeViewerIndex = -1;
     }
 
     function renderGallery(items) {
@@ -659,6 +827,26 @@
     });
 
     uploadBtn.addEventListener("click", handleUpload);
+    viewerCloseBtn.addEventListener("click", closeViewer);
+    viewerPrevBtn.addEventListener("click", () => {
+      if (!memes.length || activeViewerIndex < 0) return;
+      renderViewer(activeViewerIndex - 1);
+    });
+    viewerNextBtn.addEventListener("click", () => {
+      if (!memes.length || activeViewerIndex < 0) return;
+      renderViewer(activeViewerIndex + 1);
+    });
+    viewer.addEventListener("click", (event) => {
+      if (event.target === viewer) {
+        closeViewer();
+      }
+    });
+    window.addEventListener("keydown", (event) => {
+      if (!viewer.classList.contains("open")) return;
+      if (event.key === "Escape") closeViewer();
+      if (event.key === "ArrowLeft") renderViewer(activeViewerIndex - 1);
+      if (event.key === "ArrowRight") renderViewer(activeViewerIndex + 1);
+    });
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch((err) => {
