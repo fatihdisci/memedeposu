@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Meme Deposu</title>
   <script>
-    const SUPABASE_URL = "https://XXXX.supabase.co";
-    const SUPABASE_KEY = "eyJXXXXXX..."; // anon key
+    window.__MEME_DEPOT_CONFIG__ = {
+      SUPABASE_URL: "https://XXXX.supabase.co",
+      SUPABASE_KEY: "eyJXXXXXX..." // anon key (fallback)
+    };
   </script>
+  <script src="/api/config.js"></script>
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -461,8 +464,15 @@
   </div>
 
   <script>
+    const runtimeConfig = window.__MEME_DEPOT_CONFIG__ || {};
+    const SUPABASE_URL = String(runtimeConfig.SUPABASE_URL || "").trim();
+    const SUPABASE_KEY = String(runtimeConfig.SUPABASE_KEY || "").trim();
+
     const isPlaceholderConfig =
-      SUPABASE_URL.includes("XXXX") || SUPABASE_KEY.includes("XXXX");
+      !SUPABASE_URL ||
+      !SUPABASE_KEY ||
+      SUPABASE_URL.includes("XXXX") ||
+      SUPABASE_KEY.includes("XXXX");
     const hasSupabaseLib = !!(window.supabase && window.supabase.createClient);
     const supabase =
       hasSupabaseLib && !isPlaceholderConfig
@@ -855,7 +865,7 @@
     }
 
     if (isPlaceholderConfig) {
-      showToast("Supabase URL ve anon key girilmeden yükleme yapılamaz.");
+      showToast("Supabase ayarı eksik. Vercel env değişkenlerini kontrol edin.");
     }
 
     fetchMemes();
