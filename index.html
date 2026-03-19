@@ -345,12 +345,13 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    if (!window.supabase || !window.supabase.createClient) {
-      alert("Supabase kütüphanesi yüklenemedi.");
-      throw new Error("Supabase UMD yüklenemedi");
-    }
-
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const isPlaceholderConfig =
+      SUPABASE_URL.includes("XXXX") || SUPABASE_KEY.includes("XXXX");
+    const hasSupabaseLib = !!(window.supabase && window.supabase.createClient);
+    const supabase =
+      hasSupabaseLib && !isPlaceholderConfig
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+        : null;
     const BUCKET = "memes";
     const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
 
@@ -370,6 +371,18 @@
     let selectedFile = null;
     let activeTag = "";
     let toastTimer = null;
+
+    function isSupabaseReady() {
+      if (!hasSupabaseLib) {
+        showToast("Supabase kütüphanesi yüklenemedi.");
+        return false;
+      }
+      if (isPlaceholderConfig || !supabase) {
+        showToast("Supabase ayarları eksik. URL ve anon key girin.");
+        return false;
+      }
+      return true;
+    }
 
     function showToast(message) {
       toast.textContent = message;
@@ -453,6 +466,7 @@
         }
 
         if (action === "delete") {
+          if (!isSupabaseReady()) return;
           const ok = confirm("Bu meme silinsin mi?");
           if (!ok) return;
 
@@ -504,6 +518,11 @@
     }
 
     async function fetchMemes(query = "") {
+      if (!isSupabaseReady()) {
+        memes = [];
+        renderGallery(memes);
+        return;
+      }
       try {
         const q = query.trim();
         let builder = supabase
@@ -528,6 +547,7 @@
     }
 
     async function handleUpload() {
+      if (!isSupabaseReady()) return;
       if (!selectedFile) {
         showToast("Lütfen önce bir görsel seçin.");
         return;
@@ -614,6 +634,10 @@
       });
     });
 
+    // Dropzone dışına dosya bırakıldığında tarayıcının dosyayı açmasını engeller.
+    window.addEventListener("dragover", (event) => event.preventDefault());
+    window.addEventListener("drop", (event) => event.preventDefault());
+
     ["dragleave", "drop"].forEach((name) => {
       dropzone.addEventListener(name, (event) => {
         event.preventDefault();
@@ -640,6 +664,10 @@
       navigator.serviceWorker.register("/sw.js").catch((err) => {
         console.error("Service Worker kaydı başarısız:", err);
       });
+    }
+
+    if (isPlaceholderConfig) {
+      showToast("Supabase URL ve anon key girilmeden yükleme yapılamaz.");
     }
 
     fetchMemes();
